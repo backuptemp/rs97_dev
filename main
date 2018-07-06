@@ -1,0 +1,12 @@
+#!/bin/sh
+export SDL_NOMOUSE=1
+export HOME=/mnt/int_sd
+
+swapon /dev/mmcblk0p2
+/usr/share/splash/splash
+
+cd /mnt/game/gmenu2x/
+while true; do
+  ./gmenu2x
+done
+reboot

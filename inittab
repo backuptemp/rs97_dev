@@ -1,0 +1,80 @@
+# /etc/inittab
+#
+# Copyright (C) 2001 Erik Andersen <andersen@codepoet.org>
+#
+# Note: BusyBox init doesn't support runlevels.  The runlevels field is
+# completely ignored by BusyBox init. If you want runlevels, use
+# sysvinit.
+#
+# Format for each entry: <id>:<runlevels>:<action>:<process>
+#
+# id        == tty to run on, or empty for /dev/console
+# runlevels == ignored
+# action    == one of sysinit, respawn, askfirst, wait, and once
+# process   == program to run
+
+# Startup the system
+::sysinit:/bin/mount -t proc proc /proc
+::sysinit:/bin/mount -t sysfs sysfs /sys
+::sysinit:/bin/mount -o size=64k,mode=0755 -t tmpfs tmpfs /dev
+::sysinit:/bin/mkdir -p /dev/pts
+::sysinit:/bin/mount -o mode=0620 -t devpts devpts /dev/pts
+::sysinit:/bin/mount -t tmpfs tmpfs /tmp
+::sysinit:/bin/mount -t tmpfs tmpfs /var
+
+
+::sysinit:/bin/echo /sbin/mdev > /proc/sys/kernel/hotplug
+::sysinit:/sbin/mdev -s
+
+#::sysinit:/bin/hostname -F /etc/hostname
+
+# lo networking
+#::sysinit:/sbin/ifconfig lo 127.0.0.1 up
+#::sysinit:/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 lo
+
+# Logging junk
+#::sysinit:/sbin/syslogd -C
+::sysinit:/sbin/klogd
+
+
+# USB networking
+#::sysinit:/sbin/ifconfig usb0 10.1.0.2 netmask 255.255.255.252 up
+#::sysinit:/sbin/route add default gw 10.1.0.1
+
+# Miscellaneous daemons
+#::sysinit:/usr/sbin/inetd
+#::sysinit:/usr/sbin/udhcpd /etc/udhcpd.conf
+
+# Run rc script
+#::sysinit:/etc/init.d/rcS
+
+#Mount appfs
+#::sysinit:/bin/mount /dev/mmcblk0p2 /usr/mtdblock3  -t ext3  -o ro
+#::sysinit:/bin/mount /dev/mmcblk0p3 /usr/mtdblock4  -t ext3 -o rw
+::sysinit:/bin/mount /dev/mmcblk0p3 /mnt/game -t vfat -o rw,utf8
+::sysinit:/bin/mount /dev/mmcblk0p4 /mnt/int_sd -t vfat -o rw,utf8
+::sysinit:/bin/mknod  /dev/tcsm c 238 73
+#::sysinit:/bin/cp  /boot/local/dmenu/dmenu_ln /tmp/dmenu_ln
+
+#wifi config,now no use
+#::sysinit:/bin/mkdir -p /var/run/wpa_supplicant
+#::sysinit:/bin/mkdir -p /var/state/dhcp
+#::sysinit:/bin/touch /var/state/dhcp/dhclient.lease
+#::sysinit:/bin/touch /var/state/dhcp/dhcpd.leases
+
+# Launch the main application
+#tty1::respawn:/etc/main
+tty1::respawn:/bin/sh
+
+# Put a getty on the serial port
+ttyS1::respawn:/sbin/getty -L ttyS1 57600 vt100
+
+# Stuff to do for the 3-finger salute
+::ctrlaltdel:/sbin/reboot
+
+# Stuff to do before rebooting
+null::shutdown:/usr/bin/killall klogd
+null::shutdown:/usr/bin/killall syslogd
+null::shutdown:/bin/umount -a -r
+null::shutdown:/sbin/swapoff -a
+
